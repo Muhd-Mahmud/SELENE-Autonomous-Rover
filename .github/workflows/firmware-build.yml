@@ -1,26 +1,43 @@
+
 name: Firmware build
 
 on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
 
 jobs:
   compile:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+
       - name: Install PlatformIO
         run: python -m pip install platformio
-      - name: Prepare non-secret build configuration
-        run: python3 scripts/setup_local_config.py
+
+      - name: Prepare SELENE configuration
+        run: |
+          python3 scripts/setup_local_config.py
+
+          if [ ! -f include/selene_config.h ]; then
+            cp include/selene_config.example.h include/selene_config.h
+          fi
+
+          test -s include/selene_config.h
+          echo "SELENE configuration ready"
+
       - name: Verify dashboard and project files
         run: |
           python3 scripts/embed_dashboard.py
           python3 tests/check_project.py
+
       - name: Compile ESP32-S3 firmware
         run: pio run -e selene_v4
