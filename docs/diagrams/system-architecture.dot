@@ -1,0 +1,29 @@
+digraph G {
+  graph [rankdir=LR, bgcolor="transparent", pad=".25", nodesep=".55", ranksep="1.02", splines=polyline, fontname="Helvetica", outputorder=edgesfirst];
+  node [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=13, margin=".17,.14", penwidth=1.6];
+  edge [fontname="Helvetica", fontsize=10, color="#718096", penwidth=1.7, arrowsize=.65];
+  battery [label="2S Li-ion\n7.4 V nominal\n8.4 V full", fillcolor="#fef3f2", color="#f59090", fontcolor="#9b3232"];
+  buck [label="MP1584 buck\n~5 V → ESP32 VIN", fillcolor="#fef3f2", color="#f59090", fontcolor="#9b3232"];
+  motorpower [label="Motor supply\nRegulated to motor rating\n(verify voltage)", fillcolor="#fff4eb", color="#e6a76b", fontcolor="#814b21"];
+  esp [label="ESP32-S3 DevKitC-1-N8\nWi-Fi AP · Web dashboard\nFirmware v4.3", fillcolor="#eaf1fe", color="#4281dd", fontcolor="#173962", fontsize=15, penwidth=2.4];
+  drv [label="TB6612FNG\nVCC = 3.3 V logic\nVM = motor supply", fillcolor="#efeafd", color="#9a79d9", fontcolor="#533d7c"];
+  motors [label="Left + right\nTT gear motors", fillcolor="#efeafd", color="#9a79d9", fontcolor="#533d7c"];
+  imu [label="MPU6500 IMU\nI²C 0x68", fillcolor="#e6f7fd", color="#65b7cf", fontcolor="#205c73"];
+  tof [label="VL53L0X ToF\nI²C 0x29", fillcolor="#e6f7fd", color="#65b7cf", fontcolor="#205c73"];
+  enc [label="LM393 encoders ×2\nGPIO10 / GPIO12", fillcolor="#e9f7ed", color="#79bc94", fontcolor="#2c6741"];
+  line [label="HW-006 tracker\nGPIO18", fillcolor="#e9f7ed", color="#79bc94", fontcolor="#2c6741"];
+  browser [label="Browser / Laptop\n192.168.4.1", fillcolor="#f2f4fd", color="#8a9ada", fontcolor="#394977"];
+  battery -> buck [label="battery"];
+  battery -> motorpower [style=dashed, label="separate rail"];
+  buck -> esp [label="5 V / GND"];
+  motorpower -> drv [label="VM / GND"];
+  esp -> drv [label="GPIO4,5,6\nGPIO15,16,7,17", color="#9270ce"];
+  drv -> motors [label="A / B outputs", color="#9270ce"];
+  imu -> esp [label="SDA8 / SCL9", color="#65b7cf"];
+  tof -> esp [label="SDA8 / SCL9", color="#65b7cf"];
+  enc -> esp [color="#79bc94"];
+  line -> esp [color="#79bc94"];
+  browser -> esp [dir=both, label="Wi-Fi / HTTP", color="#8198d4"];
+  {rank=same; imu; tof; enc; line; browser;}
+  {rank=same; battery;}
+}

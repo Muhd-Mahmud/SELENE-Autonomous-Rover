@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SELENE v4.2.3 / Automatic Encoder Tests</title>
+<style>
+:root{color-scheme:dark;--bg:#080f1a;--panel:#131f2d;--line:#293c4e;--text:#ebf4ff;--dim:#9cb0c3;--aqua:#55ebc5;--amber:#ffd38b;--red:#ff7b82}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 10% 0%,#18304a,#080f1a 65%);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--text)}
+main{max-width:1200px;margin:auto;padding:22px}header{display:flex;gap:20px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:22px}
+h1{font-size:clamp(26px,4vw,38px);letter-spacing:.12em;margin:0;line-height:1.1}header p{margin:5px 0;color:var(--dim)}
+.tag{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:24px;padding:7px 13px;font-size:13px;color:var(--dim)}.dot{width:8px;height:8px;border-radius:50%;background:var(--red)}.dot.online{background:var(--aqua);box-shadow:0 0 10px var(--aqua)}
+.grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:15px}.card{grid-column:span 4;background:linear-gradient(150deg,#162638,#101b29);border:1px solid var(--line);border-radius:16px;padding:20px;min-width:0}.wide{grid-column:span 8}.full{grid-column:span 12}
+h2{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);margin:0 0 13px}.value{font-size:34px;font-weight:720;letter-spacing:-.035em}.small{font-size:13px;color:var(--dim)}
+.labelrow{display:flex;align-items:center;justify-content:space-between;margin:7px 0;border-bottom:1px solid #283948;padding-bottom:6px;gap:16px}.labelrow span:last-child{font-variant-numeric:tabular-nums;font-weight:600;text-align:right}
+.good{color:var(--aqua)}.warn{color:var(--amber)}.bad{color:var(--red)}
+#trace{width:100%;height:125px;border-top:1px solid var(--line);margin-top:12px}
+#path{width:100%;height:230px;background:#081624;border-radius:8px;border:1px solid #30475a;margin-top:10px}
+.btns{display:flex;gap:8px;flex-wrap:wrap}button{border-radius:8px;border:1px solid #3f5b70;background:#23445a;color:var(--text);font-size:14px;font-weight:650;padding:10px 14px;cursor:pointer}button:hover:not(:disabled){background:#2a6076}button:disabled{cursor:not-allowed;opacity:.36}button.stop{border-color:#d65d69;background:#9c2539;color:#fff}button.stop:hover{background:#c62e4b}
+.notice{border-left:3px solid var(--amber);background:#30291f;color:#ffddad;padding:10px 12px;font-size:13px;border-radius:6px;margin-bottom:12px}
+#eventlog{max-height:140px;overflow:auto;font:12px/1.8 ui-monospace,monospace;color:#c1d1df;white-space:pre-wrap}
+@media(max-width:900px){.card{grid-column:span 6}.wide{grid-column:span 12}}@media(max-width:590px){.card{grid-column:span 12}main{padding:12px}}
+</style></head><body><main>
+<header><div><h1>SELENE <span style="color:#55ebc5">/</span> MISSION CONTROL</h1><p>v4.2.3 · IMU verified · Automated encoder repeatability · Experimental encoder odometry · Onboard Wi-Fi</p></div><div class="tag"><span id="dot" class="dot"></span><span id="connection">Connecting to rover…</span></div></header>
+<section class="grid">
+<div class="card"><h2>Rover health</h2><div class="labelrow"><span>Uptime</span><span id="uptime">—</span></div><div class="labelrow"><span>Mode</span><span id="mode">—</span></div><div class="labelrow"><span>Wi-Fi clients</span><span id="clients">—</span></div><div class="labelrow"><span>E-stop</span><span id="estop">—</span></div></div>
+<div class="card"><h2>Front distance · VL53L0X</h2><div class="value" id="distance">—</div><div class="small" id="tofstate">Awaiting sensor</div><canvas id="trace"></canvas></div>
+<div class="card"><h2>Hardware status</h2><div class="labelrow"><span id="imuname">IMU</span><span id="mpustate">—</span></div><div class="labelrow"><span>VL53L0X</span><span id="tofpresent">—</span></div><div class="labelrow"><span>IR tracker</span><span id="tracker">—</span></div><div class="labelrow"><span>Encoders</span><span id="encstate">—</span></div></div>
+<div class="card"><h2 id="imuTitle">Inertial measurement · IMU</h2><div class="labelrow"><span>Acceleration (m/s²)</span><span id="accel">—</span></div><div class="labelrow"><span>Gyro (rad/s)</span><span id="gyro">—</span></div><div class="labelrow"><span>Temperature</span><span id="temp">—</span></div>
+<div class="labelrow"><span>Accel norm</span><span id="gravity">—</span></div>
+<div class="labelrow"><span>Raw accel counts (XYZ)</span><span id="rawaccel">—</span></div>
+<div class="labelrow"><span>IMU fault / state</span><span id="imufault">—</span></div>
+<div class="labelrow"><span>Readback PWR1 / ACC</span><span id="imuregs">—</span></div>
+<div class="labelrow"><span>Valid / zero / I2C errors</span><span id="imucounts">—</span></div>
+<p class="small">Stationary acceleration norm should be near 9.8 m/s². An I2C ACK or WHO_AM_I match alone is not a valid sensor reading.</p></div>
+<div class="card"><h2>Wheel encoders</h2><div class="labelrow"><span>Left pulses</span><span id="left">—</span></div><div class="labelrow"><span>Right pulses</span><span id="right">—</span></div><div class="labelrow"><span>Left rate</span><span id="lr">—</span></div><div class="labelrow"><span>Right rate</span><span id="rr">—</span></div>
+<div class="labelrow"><span>Last pulse L / R</span><span id="pulseDelta">—</span></div>
+<p class="small">Encoder totals increase when spun by hand; single output per wheel does not indicate direction.</p></div>
+<div class="card"><h2>Drive readiness</h2><div class="labelrow"><span>Motor tests</span><span id="testflag">—</span></div><div class="labelrow"><span>Guarded crawl</span><span id="guardflag">—</span></div><div class="labelrow"><span>Wheel calibration</span><span id="calibrated">—</span></div><div class="small">No room mapping or automatic turning in v4.2. Guarded crawl stays locked.</div></div>
+<div class="card wide"><h2>Experimental odometry · wheel pulse integration</h2>
+<div class="notice">This is NOT a map or localization system. Motion direction is inferred from motor commands; manual wheel rotation and coasting are not tracked accurately. Set your measured calibration values in <code>include/selene_config.h</code>.</div>
+<div class="labelrow"><span>Calibration geometry</span><span id="geometry">NOT SET</span></div>
+<div class="labelrow"><span>Direction source</span><span id="odomsource">—</span></div>
+<div class="labelrow"><span>Odometry quality</span><span id="odomquality">—</span></div>
+<div class="labelrow"><span>Pose X / Y</span><span id="xy">—</span></div>
+<div class="labelrow"><span>Heading</span><span id="heading">—</span></div>
+<div class="labelrow"><span>Wheel paths L / R</span><span id="wheelDistance">—</span></div>
+<div class="labelrow"><span>Excluded uncommanded edges L / R</span><span id="untracked">—</span></div>
+<canvas id="path" aria-label="Estimated odometry trace, not an occupancy map"></canvas>
+<div class="btns"><button id="resetodom">Reset estimated origin (IDLE only)</button></div>
+<p class="small">Values will appear only after wheel diameter, track width and encoder pulses per wheel revolution are entered and the firmware is re-uploaded.</p></div>
+<div class="card"><h2>Calibration checklist</h2>
+<div class="labelrow"><span>Wheel outer diameter</span><span id="geomD">—</span></div>
+<div class="labelrow"><span>Wheel center-to-center track</span><span id="geomB">—</span></div>
+<div class="labelrow"><span>Encoder pulses / wheel turn</span><span id="geomP">—</span></div>
+<p class="small">Mark wheel with tape. Turn exactly one full revolution by hand and observe encoder pulse differences. Repeat and average; account for motor gearbox. Then check both direction pins on raised wheels.</p>
+</div>
+<div class="card wide"><h2>Automated encoder repeatability · raised wheels only</h2>
+<div class="notice">Before enabling in firmware, verify rated motor voltage at TB6612 VM (many TT motors must NOT receive a full 2S battery voltage). Keep wheels secured above ground and a physical motor-power switch reachable.</div>
+<p class="small">With the standard Arm step and acknowledgement below, each Auto test runs exactly 3 brief 350ms PWM pulses, one motor at a time, with 1s cooldowns. The rover stops on lost browser heartbeat or STOP. This measures <b>pulses per timed pulse</b>, not pulses per 360° wheel turn.</p>
+<div class="btns"><button id="autoleft" disabled>Auto test LEFT ×3</button><button id="autoright" disabled>Auto test RIGHT ×3</button></div>
+<div class="labelrow"><span>Calibration motor / phase</span><span id="autostate">—</span></div>
+<div class="labelrow"><span>Runs completed</span><span id="autoruns">—</span></div>
+<div class="labelrow"><span>Left pulses (3 runs)</span><span id="autolvals">—</span></div>
+<div class="labelrow"><span>Right pulses (3 runs)</span><span id="autorvals">—</span></div>
+<p class="small">For a LEFT test, right pulses should stay near zero; for a RIGHT test, left pulses should. This checks signal repeatability. Absolute pulses per wheel revolution still requires a marked wheel/index or known gearbox ratio.</p>
+</div>
+<div class="card wide"><h2>Drive diagnostics · supervised only</h2>
+<div class="notice">Physical power switch must be reachable. Raise both wheels for motor tests; confirm motor supply rating first. Browser control is not a substitute for a physical emergency stop.</div>
+<label style="display:block;margin-bottom:12px"><input type="checkbox" id="ack"> Both wheels are lifted and wiring/power have been checked</label>
+<div class="btns"><button id="arm" disabled>Arm 8s</button><button id="testleft" disabled>Pulse left · 300ms</button><button id="testright" disabled>Pulse right · 300ms</button><button id="testboth" disabled>Pulse both · 300ms</button><button class="stop" id="stop">STOP / LATCH</button><button id="reset">Clear E-stop</button></div>
+<p class="small">Arm once per pulse. Commands are rejected by firmware unless the test feature was explicitly enabled in its configuration.</p>
+<label style="display:block;margin:12px 0"><input type="checkbox" id="floorack"> Floor is cleared, rover is attended, and physical switch is reachable</label>
+<div class="btns"><button id="guard" disabled>Supervised guarded crawl · max 3s</button></div>
+<p class="small" id="commandstatus" aria-live="polite">Commands idle.</p></div>
+<div class="card"><h2>Last event</h2><div id="eventlog">Waiting for data…</div><p class="small">Refreshes four times each second. Wi-Fi signal lost during crawl → motor stop.</p></div>
+<div class="card full"><h2>Navigation maturity</h2><div class="small">v4.2 provides: live sensors, checked IMU gravity norm, motor pulse deltas, and a basic wheel-encoder odometry trace after you enter measured geometry. No signed encoder feedback, velocity PID, obstacle map, SLAM, reverse obstacle sensing, or autonomous steering. Floor driving must remain disabled until separately validated.</div></div>
+</section></main>
+<script>
+'use strict';
+const el=id=>document.getElementById(id), hist=[], cap=65, trail=[];let lastOk=0,lastMode='',lastMs=-1,latestT=null;
+const set=(id,s)=>{el(id).textContent=String(s)};
+const number=(v,d=1)=>typeof v==='number'&&Number.isFinite(v)?v.toFixed(d):'—';
+const label=(id,on,good='READY',bad='NOT READY')=>{set(id,on?good:bad);el(id).className=on?'good':'warn'};
+function plot(){const c=el('trace'),w=Math.max(c.clientWidth,60),h=Math.max(c.clientHeight,60),dpr=window.devicePixelRatio||1;c.width=w*dpr;c.height=h*dpr;const x=c.getContext('2d');x.scale(dpr,dpr);x.clearRect(0,0,w,h);x.strokeStyle='#3f5969';x.beginPath();x.moveTo(0,h-15);x.lineTo(w,h-15);x.stroke();const finite=hist.filter(Number.isFinite);if(finite.length<2)return;const mx=Math.max(450,...finite),mn=0;x.lineWidth=2.4;x.strokeStyle='#55ebc5';x.beginPath();hist.forEach((v,i)=>{if(!Number.isFinite(v))return;const px=i*w/(cap-1),py=h-15-(v-mn)/(mx-mn)*(h-25);if(i===0||!Number.isFinite(hist[i-1]))x.moveTo(px,py);else x.lineTo(px,py)});x.stroke();}
+function plotOdometry(){
+  const canvas=el('path'), w=Math.max(canvas.clientWidth,100),h=Math.max(canvas.clientHeight,130),dpr=window.devicePixelRatio||1;
+  canvas.width=w*dpr;canvas.height=h*dpr;const ctx=canvas.getContext('2d');ctx.scale(dpr,dpr);
+  ctx.clearRect(0,0,w,h);ctx.strokeStyle='#334e60';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(0,h/2);ctx.lineTo(w,h/2);ctx.moveTo(w/2,0);ctx.lineTo(w/2,h);ctx.stroke();
+  if(trail.length<1){ctx.fillStyle='#a8bdca';ctx.font='13px system-ui';ctx.textAlign='center';ctx.fillText('No calibrated odometry samples',w/2,h/2-15);return;}
+  const span=Math.max(400,...trail.flatMap(p=>[Math.abs(p.x),Math.abs(p.y)]))*1.5;
+  const scale=Math.min(w,h)*.47/span;
+  ctx.strokeStyle='#55ebc5';ctx.lineWidth=2.4;ctx.beginPath();
+  trail.forEach((pt,i)=>{const x=w/2+pt.x*scale,y=h/2-pt.y*scale;i?ctx.lineTo(x,y):ctx.moveTo(x,y)});ctx.stroke();
+  const t=trail[trail.length-1];const x=w/2+t.x*scale,y=h/2-t.y*scale;
+  ctx.save();ctx.translate(x,y);ctx.rotate(-t.a);ctx.fillStyle='#ffd38b';ctx.beginPath();ctx.moveTo(10,0);ctx.lineTo(-7,-5);ctx.lineTo(-7,5);ctx.closePath();ctx.fill();ctx.restore();
+  ctx.fillStyle='#9cb0c3';ctx.font='11px system-ui';ctx.fillText('Origin (0,0)',w/2+8,h/2+13);
+}
+async function refresh(){try{const r=await fetch('/api/state',{cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);const t=await r.json();lastOk=Date.now();el('dot').className='dot online';set('connection','ESP32 online · '+(t.ip||'192.168.4.1'));
+set('uptime',Math.floor(t.ms/1000)+' s');set('mode',t.mode);set('clients',t.wifi_clients);set('estop',t.estop?'LATCHED':'clear');el('estop').className=t.estop?'bad':'good';
+set('distance',t.tof_ok?t.tof_mm+' mm':'—');label('tofpresent',t.tof_present);set('tofstate',t.tof_ok?'Valid front measurement':'Unavailable / invalid: motors must stop');
+hist.push(t.tof_ok?t.tof_mm:null);if(hist.length>cap)hist.shift();plot();
+set('imuname',t.imu_model||'IMU');set('imuTitle','Inertial measurement · '+(t.imu_model||'IMU'));label('mpustate',t.imu_ok);set('tracker',t.tracker+' (raw; not a health check)');set('encstate',t.enc_l+' / '+t.enc_r);
+set('rawaccel',[(t.imu_raw_ax??'—'),(t.imu_raw_ay??'—'),(t.imu_raw_az??'—')].join(' / '));
+set('imufault',t.imu_fault||'UNKNOWN');el('imufault').className=t.imu_ok?'good':'bad';
+set('imuregs',(t.imu_pwr1??'—')+' / '+(t.imu_accel_config??'—')+' (decimal)');
+set('imucounts',(t.imu_valid_frames??'—')+' / '+(t.imu_zero_frames??'—')+' / '+(t.imu_i2c_errors??'—'));
+set('accel',t.imu_ok?[number(t.ax),number(t.ay),number(t.az)].join(' / '):'—');set('gyro',t.imu_ok?[number(t.gx,2),number(t.gy,2),number(t.gz,2)].join(' / '):'—');set('temp',t.imu_ok?number(t.temp_c)+' °C':'—');
+set('left',t.enc_l);set('right',t.enc_r);set('lr',number(t.left_rate,1)+' /s');set('rr',number(t.right_rate,1)+' /s');
+set('gravity',t.imu_ok?number(t.accel_magnitude,2)+' m/s² · '+(t.imu_gravity_plausible?'PLAUSIBLE':'CHECK READINGS'):'UNAVAILABLE');el('gravity').className=t.imu_gravity_plausible?'good':'warn';
+set('pulseDelta',(t.last_test_left_pulses??'—')+' / '+(t.last_test_right_pulses??'—'));
+set('autostate',(t.auto_cal_side||'NONE')+' / '+(t.auto_cal_stage||'IDLE'));
+set('autoruns',(t.auto_cal_done??0)+'/3');
+set('autolvals',(t.auto_cal_left_pulses||[]).join(' / '));
+set('autorvals',(t.auto_cal_right_pulses||[]).join(' / '));
+set('geometry',t.odom_configured?(t.calibrated?'MEASURED & MARKED VERIFIED':'ENTERED · UNVERIFIED'):'NOT SET');
+set('odomsource',t.odom_direction_source||'—');set('odomquality',t.odom_quality||'—');
+set('geomD',(t.wheel_diameter_mm||0)>0?number(t.wheel_diameter_mm,2)+' mm':'unknown');
+set('geomB',(t.track_width_mm||0)>0?number(t.track_width_mm,2)+' mm':'unknown');
+set('geomP',(t.encoder_ppr||0)>0?number(t.encoder_ppr,2)+' pulses/turn':'unknown');
+set('xy',t.odom_configured?number(t.odom_x_mm,1)+' / '+number(t.odom_y_mm,1)+' mm':'—');
+set('heading',t.odom_configured?number((t.odom_theta_rad||0)*180/Math.PI,1)+'°':'—');
+set('wheelDistance',t.odom_configured?number(t.odom_left_mm,1)+' / '+number(t.odom_right_mm,1)+' mm':'—');
+set('untracked',(t.ignored_manual_left??'—')+' / '+(t.ignored_manual_right??'—'));
+if(t.odom_configured){if(t.ms < lastMs)trail.length=0; // reboot
+  if(t.ms!==lastMs){trail.push({x:t.odom_x_mm||0,y:t.odom_y_mm||0,a:t.odom_theta_rad||0});if(trail.length>450)trail.shift();}}
+else trail.length=0;
+lastMs=t.ms;latestT=t;plotOdometry();
+el('resetodom').disabled=t.mode!=='IDLE';
+label('testflag',t.motor_tests_enabled,'ENABLED','LOCKED');label('guardflag',t.guard_enabled,'ENABLED','LOCKED');label('calibrated',t.calibrated,'VERIFIED','NOT SET');
+el('arm').disabled=!t.motor_tests_enabled||t.estop||!el('ack').checked || (t.mode!=='IDLE' && t.mode!=='ARMED');
+for(const id of ['testleft','testright','testboth','autoleft','autoright'])el(id).disabled=!t.motor_tests_enabled||t.estop||!t.armed||!el('ack').checked||t.mode!=='ARMED';
+el('guard').disabled=!t.guard_enabled||t.estop||!t.tof_ok||!el('floorack').checked;
+if(lastMode!==t.mode&&lastMode){set('commandstatus','Rover mode: '+t.mode)}lastMode=t.mode;
+set('eventlog',t.last_event||'Ready');
+}catch(e){if(Date.now()-lastOk>1200){el('dot').className='dot';set('connection','Connection lost');set('commandstatus','No telemetry. Check AP and rover power.')}}}
+async function command(cmd,ack=''){try{let b=new URLSearchParams({cmd,ack});let r=await fetch('/api/command',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:b});const j=await r.json();set('commandstatus',(j.ok?'Accepted: ':'Rejected: ')+(j.message||cmd));refresh()}catch(e){set('commandstatus','Command failed: '+e.message)}}
+el('autoleft').onclick=()=>{if(confirm('Lifted wheels, verified motor voltage, physical switch ready? Run 3 LEFT pulses?'))command('auto_left','WHEELS_LIFTED')};
+el('autoright').onclick=()=>{if(confirm('Lifted wheels, verified motor voltage, physical switch ready? Run 3 RIGHT pulses?'))command('auto_right','WHEELS_LIFTED')};
+el('ack').addEventListener('change',refresh);el('floorack').addEventListener('change',refresh);el('arm').onclick=()=>command('arm','WHEELS_LIFTED');el('testleft').onclick=()=>command('pulse_left','WHEELS_LIFTED');el('testright').onclick=()=>command('pulse_right','WHEELS_LIFTED');el('testboth').onclick=()=>command('pulse_both','WHEELS_LIFTED');
+el('stop').onclick=()=>command('stop');el('reset').onclick=()=>{if(confirm('Clear latched E-stop? Motors will stay OFF.'))command('reset_estop')};
+el('guard').onclick=()=>{if(confirm('Guarded crawl requires CALIBRATED wheels, clear floor, stable ToF and close supervision. Proceed?'))command('guard','FLOOR_CLEAR')};
+el('resetodom').onclick=()=>{if(confirm('Reset the experimental odometry origin? Encoder totals remain unchanged.')){trail.length=0;command('reset_odom');}};
+setInterval(refresh,250);setInterval(()=>{fetch('/api/ping',{method:'POST'}).catch(()=>{})},450);
+window.addEventListener('pagehide',()=>{const b=new URLSearchParams({cmd:'stop'});navigator.sendBeacon('/api/command',b)});
+refresh();
+</script></body></html>

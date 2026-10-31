@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 330" role="img" aria-label="SELENE Autonomous Rover — ESP32-S3 Robotics Research Platform">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#0a1430"/><stop offset=".53" stop-color="#142c51"/><stop offset="1" stop-color="#0a4150"/></linearGradient>
+    <linearGradient id="line" x1="0" x2="1"><stop stop-color="#68e1ef"/><stop offset="1" stop-color="#9b9dff"/></linearGradient>
+    <pattern id="dots" width="28" height="28" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1" fill="#91c9e3" opacity=".14"/></pattern>
+    <filter id="glow"><feGaussianBlur stdDeviation="7"/></filter>
+  </defs>
+  <rect width="1200" height="330" rx="19" fill="url(#bg)"/><rect width="1200" height="330" rx="19" fill="url(#dots)"/>
+  <path d="M0 262H1200 M0 286H1200 M0 305H1200" stroke="#78a9ba" stroke-width="1" opacity=".11"/>
+  <path d="M820 0L680 330 M1000 0L870 330 M1160 0L1020 330" stroke="#71bad5" stroke-width="1" opacity=".10"/>
+  <text x="68" y="74" font-family="Arial,Helvetica,sans-serif" font-size="17" font-weight="600" fill="#6fe5e6" letter-spacing="5">ROBOTICS · EMBEDDED SYSTEMS · AUTONOMY</text>
+  <text x="65" y="176" font-family="Arial,Helvetica,sans-serif" font-weight="800" font-size="104" letter-spacing="5" fill="#f6fbff">SELENE</text>
+  <rect x="68" y="195" width="310" height="5" rx="2" fill="url(#line)"/>
+  <text x="67" y="238" font-family="Arial,Helvetica,sans-serif" font-weight="500" font-size="26" letter-spacing="2" fill="#d9e9f3">AUTONOMOUS ROVER</text>
+  <text x="67" y="279" font-family="Arial,Helvetica,sans-serif" font-size="17" fill="#9fbed0">An evolving ESP32-S3 mobile robotics platform</text>
+  <circle cx="979" cy="155" r="126" fill="#48b8cd" opacity=".05"/><circle cx="979" cy="155" r="112" fill="none" stroke="#6cbdd7" opacity=".16" stroke-width="1.5" stroke-dasharray="6 9"/>
+  <g transform="translate(794 87)" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M60 123H302" stroke="#9fe7ef" stroke-width="4" opacity=".38"/>
+    <g fill="#152e49" stroke="#83e0e8" stroke-width="5"><circle cx="93" cy="145" r="29"/><circle cx="276" cy="145" r="29"/></g>
+    <circle cx="93" cy="145" r="10" fill="#83e0e8"/><circle cx="276" cy="145" r="10" fill="#83e0e8"/>
+    <path d="M69 120L103 66H267L312 121Z" fill="#133d58" stroke="#b6eeff" stroke-width="4"/>
+    <path d="M115 66L141 42H238L263 66" fill="none" stroke="#6bbedd" stroke-width="4"/>
+    <rect x="148" y="26" width="83" height="25" rx="7" fill="#50ccce" opacity=".95"/>
+    <path d="M189 24V-8" stroke="#77deef" stroke-width="4"/><circle cx="189" cy="-12" r="7" fill="#85f0ee"/>
+    <path d="M163 -23Q188 -47 215 -23 M175 -33Q188 -45 202 -33" fill="none" stroke="#9af0f2" stroke-width="3.4"/>
+    <path d="M113 87H270" stroke="#4e88b1" stroke-width="3" stroke-dasharray="4 7"/>
+    <circle cx="128" cy="106" r="5" fill="#9c9aff"/><circle cx="246" cy="106" r="5" fill="#9c9aff"/>
+  </g>
+  <rect x="1043" y="276" width="112" height="30" rx="14" fill="#163e5c" stroke="#4e829c"/><text x="1099" y="296" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" fill="#b6e8ed" font-size="13">v4.3 · ACTIVE</text>
+</svg>
